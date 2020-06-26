@@ -1,7 +1,5 @@
 import React,{useReducer} from 'react'
 
-/* import {v4 as uuid} from 'uuid'; */
-
 import ProyectoContext from './ProyectoContext';
 import ProyectoReducer from './ProyectoReducer';
 import {
@@ -10,24 +8,22 @@ import {
     AGREGAR_PROYECTO,
     VALIDAR_FORMULARIO,
     PROYECTO_ACTUAL,
-    ELIMINAR_PROYECTO
+    ELIMINAR_PROYECTO,
+    PROYECTO_ERROR
 } from'../../types/';
+
+import clienteAxios from '../../config/axios'
 
 
 
 const ProyectoState = props =>{
 
-    const proyectos =[
-        {id:1 ,nombre:'Tienda virtual'},
-        {id:2 ,nombre:'Internet'},
-        {id:3 ,nombre:'Diseño de sitio web'}
-    ]
-
     const initialState ={
         proyectos:[],
         formulario:false,
         errorformulario:false,
-        proyecto:null
+        proyecto:null,
+        mensaje:null
     }
 
     /* Dispatch para ejecutar las acciones */
@@ -39,36 +35,60 @@ const ProyectoState = props =>{
     const mostrarFormulario =()=>{
         dispatch({
             type:FORMULARIO_PROYECTO
-        })
+        });
     }
 
     /* Obtener proyectos */
 
-    const obtenerProyectos=()=>{
-        dispatch({
-            type:OBTENER_PROYECTOS,
-            payload:proyectos
-        })
+    const obtenerProyectos= async()=>{
+        try {
+            const resultado = await clienteAxios.get('/api/proyectos');
+            dispatch({
+                type:OBTENER_PROYECTOS,
+                payload:resultado.data.proyectos
+            });
+        } catch (error) {
+            const alerta ={
+                msg:'Hubo un error',
+                categoria:'alerta-error'
+            }
+            dispatch({
+                type:PROYECTO_ERROR,
+                payload:alerta
+            })            
+        }
     }
 
     /* Agregar nuevo proyecto */
 
-    const agregarProyecto=(proyecto)=>{
-        proyecto.id=Date.now();
-        console.log(proyecto);
-        
-        /* Insertar el proyecto en el state*/
-        dispatch({
-            type:AGREGAR_PROYECTO,
-            payload:proyecto
-        })
+    const agregarProyecto=async(proyecto)=>{
+
+        try {
+            const resultado = await clienteAxios.post('/api/proyectos', proyecto);
+            console.log(resultado);
+
+            dispatch({
+                type:AGREGAR_PROYECTO,
+                payload:resultado.data
+            });
+            
+        } catch (error) {
+            const alerta ={
+                msg:'Hubo un error',
+                categoria:'alerta-error'
+            }
+            dispatch({
+                type:PROYECTO_ERROR,
+                payload:alerta
+            })            
+        }
     }
 
     /* Validar formulario por errores  */
     const mostrarError =()=>{
         dispatch({
             type:VALIDAR_FORMULARIO
-        })
+        });
     }
 
     /* Selecciona el proyecto que el usuario dió click */
@@ -76,15 +96,27 @@ const ProyectoState = props =>{
         dispatch({
             type:PROYECTO_ACTUAL,
             payload:proyectoId
-        })
+        });
     }
 
     /* Elimina un proyecto */
-    const eliminarProyecto =(proyectoId)=>{
-        dispatch({
-            type:ELIMINAR_PROYECTO,
-            payload:proyectoId
-        })
+    const eliminarProyecto =async(proyectoId)=>{
+        try {
+            await clienteAxios.delete(`/api/proyectos/${proyectoId}`);
+            dispatch({
+                type:ELIMINAR_PROYECTO,
+                payload:proyectoId
+            });
+        } catch (error) {
+            const alerta ={
+                msg:'Hubo un error',
+                categoria:'alerta-error'
+            }
+            dispatch({
+                type:PROYECTO_ERROR,
+                payload:alerta
+            })            
+        }
     }
 
 
@@ -95,6 +127,7 @@ const ProyectoState = props =>{
                 formulario:state.formulario,
                 errorformulario:state.errorformulario,
                 proyecto:state.proyecto,
+                mensaje:state.mensaje,
                 mostrarFormulario,
                 obtenerProyectos,
                 agregarProyecto,

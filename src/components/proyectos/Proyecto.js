@@ -19,7 +19,7 @@ const Proyecto = ({proyecto}) => {
     }
   return (
     <li className="listado-proyectos">
-      <button type="button" className="btn btn-blank" onClick={()=>seleccionarProyecto(proyecto.id)}>
+      <button type="button" className="btn btn-blank" onClick={()=>seleccionarProyecto(proyecto._id)}>
         {proyecto.nombre}
       </button>
     </li>
